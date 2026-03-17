@@ -5,14 +5,15 @@ import {Link} from 'react-router-dom';
 
 function Services({ services }) {
   const ratingCount = services.numRatings ?? services.numReviews ?? 0;
+  const serviceId = services._id ?? services.id;
 
   return (
     <Card className="my-3 p-3 rounded border shadow-sm">
-        <Link to={`/services/${services.id}`}>
+        <Link to={`/services/${serviceId}`}>
             <Card.Img src={services.sample_image} />
         </Link>
         <Card.Body>
-            <Link to={`/services/${services.id}`}>
+            <Link to={`/services/${serviceId}`}>
                 <Card.Title as="div">
                     <strong>{services.service_name}</strong>
                 </Card.Title>

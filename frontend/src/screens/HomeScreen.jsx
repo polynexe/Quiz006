@@ -9,7 +9,7 @@ function HomeScreen() {
         <h1>Our Services</h1>
         <Row>
             {services.map(service => (
-                <Col sm={12} md={6} lg={4} xl={3}>
+            <Col sm={12} md={6} lg={4} xl={3} key={service._id ?? service.id}>
                     <Services services={service} />
                 </Col>
             ))}
