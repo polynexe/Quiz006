@@ -15,7 +15,7 @@ export const login = (email, password) => async (dispatch) => {
                 'Content-Type': 'application/json'
             }
         }
-        const { data } = await axios.post('http://127.0.0.1:8000/api/login/', { 'email': email, 'password': password }, config)
+        const { data } = await axios.post('http://127.0.0.1:8000/api/login/', { email, password }, config)
         dispatch({ type: USER_LOGIN_SUCCESS, payload: data })
 
         localStorage.setItem('userInfo', JSON.stringify(data))

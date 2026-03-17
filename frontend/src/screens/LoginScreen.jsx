@@ -36,7 +36,7 @@ function LoginScreen() {
         if (userInfo) {
             navigate('/home')
         }
-    }, [userInfo, navigate])
+    }, [userInfo])
 
   return (
     <>

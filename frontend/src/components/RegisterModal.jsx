@@ -1,19 +1,38 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
+import Alert from 'react-bootstrap/Alert';
+import { useDispatch, useSelector } from 'react-redux';
+import { register, resetRegister } from '../actions/userRegisterActions';
+
+const INITIAL_FORM_DATA = {
+  email: '',
+  username: '',
+  phone_number: '',
+  first_name: '',
+  last_name: '',
+  location: '',
+  gender: '',
+  password: '',
+  confirm_password: '',
+};
 
 function RegisterModal({ show, onHide }) {
+  const dispatch = useDispatch();
+  const userRegister = useSelector((state) => state.userRegister);
+  const { loading, error, userInfo } = userRegister;
+
   const [formData, setFormData] = useState({
-    email: '',
-    username: '',
-    phone_number: '',
-    first_name: '',
-    last_name: '',
-    location: '',
-    gender: '',
-    password: '',
-    confirm_password: '',
+    ...INITIAL_FORM_DATA,
   });
+  const [localError, setLocalError] = useState('');
+
+  const handleClose = () => {
+    setLocalError('');
+    setFormData(INITIAL_FORM_DATA);
+    dispatch(resetRegister());
+    onHide();
+  };
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -26,16 +45,54 @@ function RegisterModal({ show, onHide }) {
 
   const handleSubmit = (event) => {
     event.preventDefault();
+    setLocalError('');
+
+    if (!passwordsMatch) {
+      setLocalError('Passwords do not match.');
+      return;
+    }
+
+    const payload = {
+      email: formData.email,
+      username: formData.username,
+      phone_number: formData.phone_number,
+      first_name: formData.first_name,
+      last_name: formData.last_name,
+      location: formData.location,
+      gender: formData.gender,
+      password: formData.password,
+      merchant_id: '',
+    };
+
+    dispatch(register(payload));
   };
+
+  useEffect(() => {
+    if (userInfo) {
+      const timeout = setTimeout(() => {
+        setLocalError('');
+        setFormData(INITIAL_FORM_DATA);
+        dispatch(resetRegister());
+        onHide();
+      }, 1000);
+
+      return () => clearTimeout(timeout);
+    }
+    return undefined;
+  }, [userInfo, dispatch, onHide]);
 
   const passwordsMatch = formData.password === formData.confirm_password;
 
   return (
-    <Modal show={show} onHide={onHide} centered>
+    <Modal show={show} onHide={handleClose} centered>
       <Modal.Header closeButton>
         <Modal.Title>Register</Modal.Title>
       </Modal.Header>
       <Modal.Body>
+        {localError ? <Alert variant='danger'>{localError}</Alert> : null}
+        {!localError && error ? <Alert variant='danger'>{error}</Alert> : null}
+        {userInfo ? <Alert variant='success'>Registration successful. You can now log in.</Alert> : null}
+
         <form id='register-form' onSubmit={handleSubmit}>
           <div className='mb-3'>
             <label htmlFor='register-email' className='form-label'>Email</label>
@@ -46,6 +103,7 @@ function RegisterModal({ show, onHide }) {
               name='email'
               value={formData.email}
               onChange={handleChange}
+              disabled={loading}
               required
             />
           </div>
@@ -59,6 +117,7 @@ function RegisterModal({ show, onHide }) {
               name='username'
               value={formData.username}
               onChange={handleChange}
+              disabled={loading}
               required
             />
           </div>
@@ -72,6 +131,7 @@ function RegisterModal({ show, onHide }) {
               name='phone_number'
               value={formData.phone_number}
               onChange={handleChange}
+              disabled={loading}
               required
             />
           </div>
@@ -85,6 +145,7 @@ function RegisterModal({ show, onHide }) {
               name='first_name'
               value={formData.first_name}
               onChange={handleChange}
+              disabled={loading}
               required
             />
           </div>
@@ -98,6 +159,7 @@ function RegisterModal({ show, onHide }) {
               name='last_name'
               value={formData.last_name}
               onChange={handleChange}
+              disabled={loading}
               required
             />
           </div>
@@ -111,6 +173,7 @@ function RegisterModal({ show, onHide }) {
               name='location'
               value={formData.location}
               onChange={handleChange}
+              disabled={loading}
               required
             />
           </div>
@@ -123,6 +186,7 @@ function RegisterModal({ show, onHide }) {
               name='gender'
               value={formData.gender}
               onChange={handleChange}
+              disabled={loading}
               required
             >
                 <option value='' disabled>Choose...</option>
@@ -140,6 +204,7 @@ function RegisterModal({ show, onHide }) {
               name='password'
               value={formData.password}
               onChange={handleChange}
+              disabled={loading}
               required
             />
           </div>
@@ -153,6 +218,7 @@ function RegisterModal({ show, onHide }) {
               name='confirm_password'
               value={formData.confirm_password}
               onChange={handleChange}
+              disabled={loading}
               required
             />
             {!passwordsMatch && formData.confirm_password ? (
@@ -162,11 +228,11 @@ function RegisterModal({ show, onHide }) {
         </form>
       </Modal.Body>
       <Modal.Footer>
-        <Button variant="secondary" onClick={onHide}>
+        <Button variant="secondary" onClick={handleClose} disabled={loading}>
           Close
         </Button>
-        <Button variant="primary" type='submit' form='register-form' disabled={!passwordsMatch}>
-          Register
+        <Button variant="primary" type='submit' form='register-form' disabled={!passwordsMatch || loading}>
+          {loading ? 'Registering...' : 'Register'}
         </Button>
       </Modal.Footer>
     </Modal>

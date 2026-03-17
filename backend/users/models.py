@@ -28,6 +28,12 @@ class User(AbstractUser):
         ADMIN = 'Admin', 'Admin'
         SELLER = 'Seller', 'Seller'
         USER = 'User', 'User'
+    
+    class SellerStatus(models.TextChoices):
+        NONE = 'None', 'No application'
+        PENDING = 'Pending', 'Application pending'
+        APPROVED = 'Approved', 'Seller approved'
+        REJECTED = 'Rejected', 'Application rejected'
 
     email = models.EmailField(unique=True)
     username = models.CharField(max_length=150, blank=True, null=True)
@@ -36,6 +42,8 @@ class User(AbstractUser):
     gender = models.CharField(max_length=20, blank=True, default='')
     role = models.CharField(max_length=20, choices=Role.choices, default=Role.USER)
     merchant_id = models.CharField(max_length=100, blank=True, default='')
+    seller_status = models.CharField(max_length=20, choices=SellerStatus.choices, default=SellerStatus.NONE)
+    seller_application_reason = models.TextField(blank=True, default='')
     
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []

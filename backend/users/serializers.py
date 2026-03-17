@@ -21,6 +21,8 @@ class UserSerializer(serializers.ModelSerializer):
             'gender',
             'role',
             'merchant_id',
+            'seller_status',
+            'seller_application_reason',
             'isAdmin',
         ]
 
@@ -62,13 +64,23 @@ class RegisterSerializer(serializers.ModelSerializer):
             'last_name',
             'location',
             'gender',
-            'role',
             'merchant_id',
         ]
 
     def create(self, validated_data):
         password = validated_data.pop('password')
-        user = User(**validated_data)
-        user.set_password(password)
-        user.save()
-        return user
+        return User.objects.create_user(
+            password=password,
+            role=User.Role.USER,
+            **validated_data,
+        )
+
+
+class SellerApplicationSerializer(serializers.Serializer):
+    seller_application_reason = serializers.CharField(required=True, write_only=True)
+
+    def update(self, instance, validated_data):
+        instance.seller_status = User.SellerStatus.PENDING
+        instance.seller_application_reason = validated_data.get('seller_application_reason', instance.seller_application_reason)
+        instance.save()
+        return instance
