@@ -1,8 +1,18 @@
 import React from 'react'
-import {Navbar, Nav, Container, NavDropdown} from 'react-bootstrap';
+import {Navbar, Nav, Container} from 'react-bootstrap';
 import { Link } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { logout } from '../actions/userActions';
 
 function Header() {
+  const dispatch = useDispatch()
+  const userLogin = useSelector((state) => state.userLogin)
+  const { userInfo } = userLogin
+
+  const logoutHandler = () => {
+    dispatch(logout())
+  }
+
   return (
     <Navbar expand="lg" bg="primary" variant="dark" collapseOnSelect>
       <Container>
@@ -10,8 +20,15 @@ function Header() {
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
-            <Nav.Link as={Link} to="/login"><i className="fas fa-user"></i>User</Nav.Link>
+            {!userInfo ? (
+              <Nav.Link as={Link} to="/login"><i className="fas fa-user"></i>User</Nav.Link>
+            ) : (
+              <Nav.Link as={Link} to="/login" onClick={logoutHandler}><i className="fas fa-sign-out-alt"></i>Logout</Nav.Link>
+            )}
             <Nav.Link as={Link} to="/apply-seller"><i className="fas fa-store"></i>Become a Seller</Nav.Link>
+            {userInfo && userInfo.isAdmin ? (
+              <Nav.Link as={Link} to="/users"><i className="fas fa-users"></i>Users</Nav.Link>
+            ) : null}
           </Nav>
         </Navbar.Collapse>
       </Container>

@@ -45,6 +45,12 @@ class AdminUserListView(generics.ListAPIView):
     queryset = User.objects.all().order_by('-date_joined')
 
 
+class AdminUserDetailView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = UserSerializer
+    permission_classes = [IsAdminUser]
+    queryset = User.objects.all()
+
+
 class ApplySellerView(generics.GenericAPIView):
     serializer_class = SellerApplicationSerializer
     permission_classes = [IsAuthenticated]
