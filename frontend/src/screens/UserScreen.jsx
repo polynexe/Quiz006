@@ -1,50 +1,30 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Alert, Button, Form, Spinner, Table } from 'react-bootstrap'
 import { useNavigate } from 'react-router-dom'
-import { useSelector } from 'react-redux'
-import axios from 'axios'
+import { useDispatch, useSelector } from 'react-redux'
+import { deleteUser, listUsers, updateUser } from '../actions/userActions'
+import { USER_DELETE_RESET, USER_UPDATE_RESET } from '../constants/userConstants'
 
 function UserScreen() {
-	const [users, setUsers] = useState([])
-	const [loading, setLoading] = useState(false)
-	const [error, setError] = useState('')
 	const [editingUserId, setEditingUserId] = useState(null)
 	const [formData, setFormData] = useState({ first_name: '', last_name: '', email: '' })
-	const [actionLoading, setActionLoading] = useState(false)
 	const [successMessage, setSuccessMessage] = useState('')
 
+	const dispatch = useDispatch()
 	const navigate = useNavigate()
+
 	const userLogin = useSelector((state) => state.userLogin)
 	const { userInfo } = userLogin
+	const userList = useSelector((state) => state.userList)
+	const { loading, error, users = [] } = userList
+	const userUpdate = useSelector((state) => state.userUpdate)
+	const { loading: loadingUpdate, error: errorUpdate, success: successUpdate } = userUpdate
+	const userDelete = useSelector((state) => state.userDelete)
+	const { loading: loadingDelete, error: errorDelete, success: successDelete } = userDelete
 
 	const isAdmin = Boolean(userInfo && userInfo.isAdmin)
-
-	const fetchUsers = useCallback(async () => {
-		if (!userInfo?.token) {
-			return
-		}
-
-		try {
-			setLoading(true)
-			setError('')
-			const config = {
-				headers: {
-					Authorization: `Bearer ${userInfo.token}`,
-				},
-			}
-
-			const { data } = await axios.get('http://127.0.0.1:8000/api/admin/users/', config)
-			setUsers(data)
-		} catch (err) {
-			setError(
-				err.response && err.response.data && err.response.data.detail
-					? err.response.data.detail
-					: 'Unable to load users.'
-			)
-		} finally {
-			setLoading(false)
-		}
-	}, [userInfo])
+	const actionLoading = loadingUpdate || loadingDelete
+	const actionError = errorUpdate || errorDelete
 
 	useEffect(() => {
 		if (!userInfo) {
@@ -57,8 +37,25 @@ function UserScreen() {
 			return
 		}
 
-		fetchUsers()
-	}, [userInfo, isAdmin, navigate, fetchUsers])
+		dispatch(listUsers())
+	}, [dispatch, userInfo, isAdmin, navigate])
+
+	useEffect(() => {
+		if (successUpdate) {
+			setEditingUserId(null)
+			setSuccessMessage('User updated successfully.')
+			dispatch({ type: USER_UPDATE_RESET })
+			dispatch(listUsers())
+		}
+	}, [dispatch, successUpdate])
+
+	useEffect(() => {
+		if (successDelete) {
+			setSuccessMessage('User deleted successfully.')
+			dispatch({ type: USER_DELETE_RESET })
+			dispatch(listUsers())
+		}
+	}, [dispatch, successDelete])
 
 	const startEditHandler = (user) => {
 		if (!isAdmin) {
@@ -84,43 +81,17 @@ function UserScreen() {
 			return
 		}
 
-		try {
-			setActionLoading(true)
-			setError('')
-			setSuccessMessage('')
-
-			const config = {
-				headers: {
-					'Content-Type': 'application/json',
-					Authorization: `Bearer ${userInfo.token}`,
-				},
-			}
-
-			const { data } = await axios.put(
-				`http://127.0.0.1:8000/api/admin/users/${id}/`,
-				{
-					first_name: formData.first_name,
-					last_name: formData.last_name,
-					email: formData.email,
-				},
-				config
-			)
-
-			setUsers((prevUsers) => prevUsers.map((user) => (user.id === id ? data : user)))
-			setEditingUserId(null)
-			setSuccessMessage('User updated successfully.')
-		} catch (err) {
-			setError(
-				err.response && err.response.data && err.response.data.detail
-					? err.response.data.detail
-					: 'Unable to update user.'
-			)
-		} finally {
-			setActionLoading(false)
-		}
+		setSuccessMessage('')
+		dispatch(
+			updateUser(id, {
+				first_name: formData.first_name,
+				last_name: formData.last_name,
+				email: formData.email,
+			})
+		)
 	}
 
-	const deleteHandler = async (id) => {
+	const deleteHandler = (id) => {
 		if (!isAdmin) {
 			return
 		}
@@ -130,29 +101,8 @@ function UserScreen() {
 			return
 		}
 
-		try {
-			setActionLoading(true)
-			setError('')
-			setSuccessMessage('')
-
-			const config = {
-				headers: {
-					Authorization: `Bearer ${userInfo.token}`,
-				},
-			}
-
-			await axios.delete(`http://127.0.0.1:8000/api/admin/users/${id}/`, config)
-			setUsers((prevUsers) => prevUsers.filter((user) => user.id !== id))
-			setSuccessMessage('User deleted successfully.')
-		} catch (err) {
-			setError(
-				err.response && err.response.data && err.response.data.detail
-					? err.response.data.detail
-					: 'Unable to delete user.'
-			)
-		} finally {
-			setActionLoading(false)
-		}
+		setSuccessMessage('')
+		dispatch(deleteUser(id))
 	}
 
 	return (
@@ -160,6 +110,7 @@ function UserScreen() {
 			<h1 className='mb-3'>Users</h1>
 
 			{error ? <Alert variant='danger'>{error}</Alert> : null}
+			{actionError ? <Alert variant='danger'>{actionError}</Alert> : null}
 			{successMessage ? <Alert variant='success'>{successMessage}</Alert> : null}
 
 			{loading ? (
