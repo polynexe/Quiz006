@@ -2,6 +2,7 @@ import React from 'react'
 import services from '../services';
 import { Row, Col } from 'react-bootstrap';
 import Services from './Services';
+import Chatbox from './Chatbox';
 
 function HomeScreen() {
   return (
@@ -14,6 +15,7 @@ function HomeScreen() {
                 </Col>
             ))}
         </Row>
+      <Chatbox />
     </div>
   )
 }
